@@ -5,6 +5,7 @@ from flask import Flask, render_template, session
 from flask_socketio import SocketIO, emit
 from threading import Lock
 from io import BytesIO
+import pyglet
 import asyncio
 import threading
 import pytz
@@ -66,7 +67,7 @@ class Bot(commands.Bot):
             if message.author.name == bot.currentUser:
                 socketio.emit('my_response',
                     {'data': f"{bot.currentUser}: {message.content}"})
-                await pyg.text_to_audio(message.content)
+                text_to_audio(message.content)
                 print(bot.currentUser + ": " + message.content)
     
     #picks a random user from the queue
@@ -79,24 +80,13 @@ class Bot(commands.Bot):
 def pickrandom():
     bot.randomUser()
 
-class PygletAudio():
-    def __init__(self):#schetcky threading stuff
-        audiothread = threading.Thread(target=self.start)
-        audiothread.start()
-        
-    def start(self):
-        #imports methods on same thread its being run on
-        import pyglet
-        pyglet.app.run()
-
-    async def text_to_audio(self, text: str):
-        import pyglet #shh 
-        mp3 = BytesIO()
-        input = gTTS(text,lang='en')
-        input.write_to_fp(mp3)
-        mp3.seek(0)
-        audio = pyglet.media.load(None, file=mp3, streaming=False)
-        audio.play()
+def text_to_audio(text: str):
+    mp3 = BytesIO()
+    input = gTTS(text,lang='en')
+    input.write_to_fp(mp3)
+    mp3.seek(0)
+    audio = pyglet.media.load(None, file=mp3, streaming=False)
+    audio.play()
 
 def startBot():
     global bot
@@ -110,6 +100,4 @@ def startBot():
 if __name__=='__main__':
     thread = threading.Thread(target=startBot)
     thread.start()
-    global pyg
-    pyg = PygletAudio()
     socketio.run(app)
