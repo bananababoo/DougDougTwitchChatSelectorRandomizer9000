@@ -18,6 +18,16 @@
             socket.on('connectt', function(msg) {
                 $('#log').append('<br>' + $('<div/>').text(msg.data).html());
             })
+
+            socket.on('randompicked', function(msg) {
+                $('#log').append('<br>' + $('<div/>').text(msg.data).html());
+            })
+
+            $('form#pickrandom').submit(function(event) {
+                socket.emit('pickrandom');
+                return false;
+            });
+
         });
 
     </script>
@@ -25,11 +35,11 @@
 <body>
     <h1>Flask-SocketIO Test</h1>
     <h2>Send:</h2>
-    <form id="test" method="POST" action="#">
-        <input type="submit" value="Test">
+    <form id="pickrandom" method="POST" action="#">
+        <input type="submit" value="pickrandom">
     </form>
-    <form id="broadcast" method="POST" action="#">
-        <input type="submit" value="Broadcast">
+    <form id="tts" method="POST" action="#">
+        <input type="checkbox" value="tts">
     </form>
     <h2>Receive:</h2>
     <div id="log"></div>

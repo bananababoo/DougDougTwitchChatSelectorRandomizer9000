@@ -4,10 +4,12 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, session
 from flask_socketio import SocketIO, emit
 from threading import Lock
+from io import BytesIO
 import asyncio
 import threading
 import pytz
-import random
+import random 
+from gtts import gTTS
 
 socketio = SocketIO
 
@@ -16,21 +18,14 @@ socketio = SocketIO(app, async_mode=None)
 thread = None
 thread_lock = Lock()
 
+#idk why but this script speiciflly only works if you DON'T have eventlet installed so make sure to pip uninstall eventlet
+
 @app.route("/")
 def home():
-    return render_template('index.html')
+    return render_template('index.html')#redirects to index.html in templates folder
 
 @socketio.event
-def connect():
-    global thread
-    print(1)
-    with thread_lock:
-        print(2)
-        if thread is None:
-            print(3)
-            thread = threading.Thread(target=startBot)
-            thread.start()
-            print(thread.getName)
+def connect(): #when socket connects send data confirming connection
     socketio.emit('connectt',
                     {'data': "connected"})
 
@@ -39,8 +34,8 @@ class Bot(commands.Bot):
     currentUser = ""
 
     def __init__(self):
-        #connects to your twitch channel
-        super().__init__(token='e6yobed5d48tky6otlahj4mlwecqe7', prefix='?', initial_channels=['dougdougw'])
+        #connects to twitch channel
+        super().__init__(token='e6yobed5d48tky6otlahj4mlwecqe7', prefix='?', initial_channels=['bananababoo'])
 
     async def event_ready(self):
         print(f'Logged in as | {self.nick}')
@@ -51,8 +46,9 @@ class Bot(commands.Bot):
     async def event_message(self, message):
         await bot.process_message(message)
         if(bot.first): #picks the first random user AFTER someone talks in chat to init
-            await bot.randomUser()
+            bot.randomUser()
             bot.first = False
+
 
     async def process_message(self, message: Message):
         if message.author.name in userPool:
@@ -70,16 +66,41 @@ class Bot(commands.Bot):
             if message.author.name == bot.currentUser:
                 socketio.emit('my_response',
                     {'data': f"{bot.currentUser}: {message.content}"})
+                await pyg.text_to_audio(message.content)
                 print(bot.currentUser + ": " + message.content)
     
     #picks a random user from the queue
-    async def randomUser(this):
+    def randomUser(this):
         bot.currentUser = random.choice(list(userPool.keys()))
+        socketio.emit('randompicked',{'data': f"{bot.currentUser} was picked!"})
         print("Random User is: " + bot.currentUser)
 
+@socketio.on("pickrandom")
+def pickrandom():
+    bot.randomUser()
+
+class PygletAudio():
+    def __init__(self):#schetcky threading stuff
+        audiothread = threading.Thread(target=self.start)
+        audiothread.start()
+        
+    def start(self):
+        #imports methods on same thread its being run on
+        import pyglet
+        pyglet.app.run()
+
+    async def text_to_audio(self, text: str):
+        import pyglet #shh 
+        mp3 = BytesIO()
+        input = gTTS(text,lang='en')
+        input.write_to_fp(mp3)
+        mp3.seek(0)
+        audio = pyglet.media.load(None, file=mp3, streaming=False)
+        audio.play()
 
 def startBot():
     global bot
+    global loop
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     bot = Bot()
@@ -87,4 +108,8 @@ def startBot():
 
 
 if __name__=='__main__':
+    thread = threading.Thread(target=startBot)
+    thread.start()
+    global pyg
+    pyg = PygletAudio()
     socketio.run(app)
