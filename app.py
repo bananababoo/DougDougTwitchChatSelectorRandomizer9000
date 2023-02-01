@@ -5,7 +5,6 @@ from flask import Flask, render_template, session
 from flask_socketio import SocketIO, emit
 from threading import Lock
 from io import BytesIO
-import pyglet
 import asyncio
 import threading
 import pytz
@@ -18,6 +17,7 @@ app = Flask(__name__)
 socketio = SocketIO(app, async_mode=None)
 thread = None
 thread_lock = Lock()
+
 
 #idk why but this script speiciflly only works if you DON'T have eventlet installed so make sure to pip uninstall eventlet
 
@@ -36,7 +36,7 @@ class Bot(commands.Bot):
 
     def __init__(self):
         #connects to twitch channel
-        super().__init__(token='e6yobed5d48tky6otlahj4mlwecqe7', prefix='?', initial_channels=['bananababoo'])
+        super().__init__(token='e6yobed5d48tky6otlahj4mlwecqe7', prefix='?', initial_channels=['videowaved'])
 
     async def event_ready(self):
         print(f'Logged in as | {self.nick}')
@@ -81,12 +81,15 @@ def pickrandom():
     bot.randomUser()
 
 def text_to_audio(text: str):
+    import pyglet
     mp3 = BytesIO()
     input = gTTS(text,lang='en')
     input.write_to_fp(mp3)
     mp3.seek(0)
     audio = pyglet.media.load(None, file=mp3, streaming=False)
-    audio.play()
+    player.queue(audio)
+    player.play()
+    print(player)
 
 def startBot():
     global bot
@@ -96,8 +99,18 @@ def startBot():
     bot = Bot()
     bot.run()
 
+def pyg_init():
+    import pyglet
+    global player
+    player = pyglet.media.Player()
+    pyglet.app.run()
+    player.play()
+    print(type(player))
+
 
 if __name__=='__main__':
     thread = threading.Thread(target=startBot)
+    thread.start()
+    thread = threading.Thread(target=pyg_init)
     thread.start()
     socketio.run(app)
