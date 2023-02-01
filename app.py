@@ -1,7 +1,7 @@
 from twitchio.ext import commands
 from twitchio import *
 from datetime import datetime, timedelta
-from flask import Flask, render_template, session
+from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit
 from threading import Lock
 from io import BytesIO
@@ -17,7 +17,6 @@ app = Flask(__name__)
 socketio = SocketIO(app, async_mode=None)
 thread = None
 thread_lock = Lock()
-
 
 #idk why but this script speiciflly only works if you DON'T have eventlet installed so make sure to pip uninstall eventlet
 
@@ -36,7 +35,7 @@ class Bot(commands.Bot):
 
     def __init__(self):
         #connects to twitch channel
-        super().__init__(token='e6yobed5d48tky6otlahj4mlwecqe7', prefix='?', initial_channels=['videowaved'])
+        super().__init__(token='e6yobed5d48tky6otlahj4mlwecqe7', prefix='?', initial_channels=['bananababoo'])
 
     async def event_ready(self):
         print(f'Logged in as | {self.nick}')
@@ -67,8 +66,12 @@ class Bot(commands.Bot):
             if message.author.name == bot.currentUser:
                 socketio.emit('my_response',
                     {'data': f"{bot.currentUser}: {message.content}"})
-                text_to_audio(message.content)
-                print(bot.currentUser + ": " + message.content)
+                try:
+                    if tts_enabled:
+                        text_to_audio(message.content)
+                    print(bot.currentUser + ": " + message.content)
+                except NameError:
+                    pass
     
     #picks a random user from the queue
     def randomUser(this):
@@ -80,6 +83,12 @@ class Bot(commands.Bot):
 def pickrandom():
     bot.randomUser()
 
+@socketio.on("tts")
+def toggletts(value):
+    print("tts enabled " + str(value['data']))
+    global tts_enabled
+    tts_enabled = value['data']
+
 def text_to_audio(text: str):
     import pyglet
     mp3 = BytesIO()
@@ -89,7 +98,6 @@ def text_to_audio(text: str):
     audio = pyglet.media.load(None, file=mp3, streaming=False)
     player.queue(audio)
     player.play()
-    print(player)
 
 def startBot():
     global bot

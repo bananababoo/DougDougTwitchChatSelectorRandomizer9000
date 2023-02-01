@@ -28,6 +28,12 @@
                 return false;
             });
 
+            $('form#tts').change(function(event) {
+                console.log($('.tts-checkbox').prop('checked'))
+                socket.emit('tts',{'data': $('.tts-checkbox').prop('checked')});
+                return false;
+            });
+
         });
 
     </script>
@@ -39,7 +45,8 @@
         <input type="submit" value="pickrandom">
     </form>
     <form id="tts" method="POST" action="#">
-        <input type="checkbox" value="tts">
+        <input type="checkbox" class="tts-checkbox" value="tts" name="tts">
+        <label for="tts">Enable tts?</label>
     </form>
     <h2>Receive:</h2>
     <div id="log"></div>
