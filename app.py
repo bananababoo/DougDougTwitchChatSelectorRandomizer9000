@@ -48,7 +48,7 @@ def text_to_audio(text: str):
 
 @socketio.on("tts")
 def toggletts(value):
-    print("tts enabled " + str(value['data']))
+    print("tts " + str(value['data']))
     bot.tts_enabled = value['data']
 
 class Bot(commands.Bot):
@@ -58,6 +58,7 @@ class Bot(commands.Bot):
 
     def __init__(self):
         #connects to twitch channel
+        self.tts_enabled = False
         super().__init__(token='e6yobed5d48tky6otlahj4mlwecqe7', prefix='?', initial_channels=['bananababoo'])
 
     async def event_ready(self):
@@ -74,9 +75,9 @@ class Bot(commands.Bot):
 
 
     async def process_message(self, message: Message):
-        if message.author.name in userPool:
-            userPool.pop(message.author.name)
-        userPool[message.author.name] = message.timestamp 
+        if message.author.name.lower() in userPool:
+            userPool.pop(message.author.name.lower())
+        userPool[message.author.name.lower()] = message.timestamp 
         # update time last chatted of the user and add to the end of the dict
         two_min_ago = datetime.now(pytz.utc) - timedelta(minutes=2) # get the time 2 min ago uct
         least_most_reacent_user = list(userPool.keys())[0] # get the first user in the dict which will be the user that has chatted the longest ago
@@ -108,7 +109,7 @@ def pickrandom():
 @socketio.on("choose")
 def toggletts(value):
     print("Choose User Is: " + str(value['data']))
-    bot.currentUser = value['data']
+    bot.currentUser = (value['data']).lower()
     bot.first = False
     socketio.emit('message_send',{
         'data' : f'Choose User: {bot.currentUser}'

@@ -35,7 +35,7 @@
             $('form#choose').submit(function(event) {
                 console.log($('.choose').val())
                 socket.emit('choose',{'data': $('.choose').val()});
-                $('.choose').val = ""
+                $('.choose').val('')
                 return false;
             });
 
