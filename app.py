@@ -4,8 +4,7 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit
 from io import BytesIO
-import sys
-import time
+
 import asyncio
 import threading
 import pytz
@@ -16,7 +15,7 @@ socketio = SocketIO
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode=None)
-
+#pip install simplewebsocket 
 #idk why but this script speiciflly only works if you DON'T have eventlet installed so make sure to pip uninstall eventlet
 
 @app.route("/")
@@ -28,9 +27,34 @@ def connect(): #when socket connects send data confirming connection
     socketio.emit('message_send',
                     {'data': "Connected"})
 
+def pyg_init():
+    import pyglet
+    global player
+    player = pyglet.media.Player()
+    pyglet.app.run()
+    player.play()
+    print(type(player))
+
+
+def text_to_audio(text: str):
+    import pyglet
+    mp3 = BytesIO()
+    input = gTTS(text,lang='en')
+    input.write_to_fp(mp3)
+    mp3.seek(0)
+    audio = pyglet.media.load(None, file=mp3, streaming=False)
+    player.queue(audio)
+    player.play()
+
+@socketio.on("tts")
+def toggletts(value):
+    print("tts enabled " + str(value['data']))
+    bot.tts_enabled = value['data']
+
 class Bot(commands.Bot):
     first = True
     currentUser = ""
+    tts_enabled = False
 
     def __init__(self):
         #connects to twitch channel
@@ -64,17 +88,16 @@ class Bot(commands.Bot):
         if not bot.first:
             if message.author.name == bot.currentUser:
                 socketio.emit('message_send',
-                    {'data': f"{bot.currentUser}: {message.content}"})
-                try:
-                    if tts_enabled:
-                        text_to_audio(message.content)
-                    print(bot.currentUser + ": " + message.content)
-                except NameError:
-                    pass
-    
+                {'data': f"{bot.currentUser}: {message.content}"})
+                if bot.tts_enabled:
+                    text_to_audio(message.content)
+                print(bot.currentUser + ": " + message.content)
     #picks a random user from the queue
     def randomUser(this):
-        bot.currentUser = random.choice(list(userPool.keys()))
+        try:
+            bot.currentUser = random.choice(list(userPool.keys()))
+        except Exception:
+            return
         socketio.emit('message_send',{'data': f"{bot.currentUser} was picked!"})
         print("Random User is: " + bot.currentUser)
 
@@ -82,37 +105,22 @@ class Bot(commands.Bot):
 def pickrandom():
     bot.randomUser()
 
-@socketio.on("tts")
+@socketio.on("choose")
 def toggletts(value):
-    print("tts enabled " + str(value['data']))
-    global tts_enabled
-    tts_enabled = value['data']
+    print("Choose User Is: " + str(value['data']))
+    bot.currentUser = value['data']
+    bot.first = False
+    socketio.emit('message_send',{
+        'data' : f'Choose User: {bot.currentUser}'
+    })
 
-def text_to_audio(text: str):
-    import pyglet
-    mp3 = BytesIO()
-    input = gTTS(text,lang='en')
-    input.write_to_fp(mp3)
-    mp3.seek(0)
-    audio = pyglet.media.load(None, file=mp3, streaming=False)
-    player.queue(audio)
-    player.play()
 
 def startBot():
     global bot
-    global loop
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     bot = Bot()
     bot.run()
-
-def pyg_init():
-    import pyglet
-    global player
-    player = pyglet.media.Player()
-    pyglet.app.run()
-    player.play()
-    print(type(player))
 
 
 if __name__=='__main__':
