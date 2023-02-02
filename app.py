@@ -3,8 +3,9 @@ from twitchio import *
 from datetime import datetime, timedelta
 from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit
-from threading import Lock
 from io import BytesIO
+import sys
+import time
 import asyncio
 import threading
 import pytz
@@ -15,8 +16,6 @@ socketio = SocketIO
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode=None)
-thread = None
-thread_lock = Lock()
 
 #idk why but this script speiciflly only works if you DON'T have eventlet installed so make sure to pip uninstall eventlet
 
@@ -26,8 +25,8 @@ def home():
 
 @socketio.event
 def connect(): #when socket connects send data confirming connection
-    socketio.emit('connectt',
-                    {'data': "connected"})
+    socketio.emit('message_send',
+                    {'data': "Connected"})
 
 class Bot(commands.Bot):
     first = True
@@ -64,7 +63,7 @@ class Bot(commands.Bot):
 
         if not bot.first:
             if message.author.name == bot.currentUser:
-                socketio.emit('my_response',
+                socketio.emit('message_send',
                     {'data': f"{bot.currentUser}: {message.content}"})
                 try:
                     if tts_enabled:
@@ -76,7 +75,7 @@ class Bot(commands.Bot):
     #picks a random user from the queue
     def randomUser(this):
         bot.currentUser = random.choice(list(userPool.keys()))
-        socketio.emit('randompicked',{'data': f"{bot.currentUser} was picked!"})
+        socketio.emit('message_send',{'data': f"{bot.currentUser} was picked!"})
         print("Random User is: " + bot.currentUser)
 
 @socketio.on("pickrandom")
@@ -117,8 +116,9 @@ def pyg_init():
 
 
 if __name__=='__main__':
-    thread = threading.Thread(target=startBot)
-    thread.start()
-    thread = threading.Thread(target=pyg_init)
-    thread.start()
+    global bot_thread; global audio_thread
+    bot_thread = threading.Thread(target=startBot)
+    bot_thread.start()
+    audio_thread = threading.Thread(target=pyg_init)
+    audio_thread.start()
     socketio.run(app)

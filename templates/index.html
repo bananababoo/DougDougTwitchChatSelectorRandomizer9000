@@ -1,7 +1,12 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+    
     <title>Flask-SocketIO Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Capriola&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
     <script type="text/javascript" charset="utf-8">
@@ -9,19 +14,12 @@
 
             var socket = io();
 
-            socket.on('my_response', function(msg, cb) {
-                $('#log').append('<br>' + $('<div/>').text(': ' + msg.data).html());
+            socket.on('message_send', function(msg, cb) {
+                $('#log').append($('<div/>').text('# ' + msg.data).html() + '<br>');
+                $('#log').scrollTop = $('#log').scrollHeight
                 if (cb)
                     cb();
             });
-
-            socket.on('connectt', function(msg) {
-                $('#log').append('<br>' + $('<div/>').text(msg.data).html());
-            })
-
-            socket.on('randompicked', function(msg) {
-                $('#log').append('<br>' + $('<div/>').text(msg.data).html());
-            })
 
             $('form#pickrandom').submit(function(event) {
                 socket.emit('pickrandom');
@@ -34,21 +32,26 @@
                 return false;
             });
 
+
         });
 
     </script>
 </head>
 <body>
-    <h1>Flask-SocketIO Test</h1>
-    <h2>Send:</h2>
-    <form id="pickrandom" method="POST" action="#">
-        <input type="submit" value="pickrandom">
+    <h1 style="margin-bottom: 10px;">Twitch Random Chatinator</h1>
+    <form id="pickrandom" method="POST" action="#" >
+        <input type="submit" value="Pick Random" id="pick-random-input" style="border-color: #ccc; border-radius: 10px;">
     </form>
     <form id="tts" method="POST" action="#">
         <input type="checkbox" class="tts-checkbox" value="tts" name="tts">
         <label for="tts">Enable tts?</label>
-    </form>
-    <h2>Receive:</h2>
-    <div id="log"></div>
+    </form> 
+    <form id="choose" method="POST" action="#">
+        <input type="text" class="tts-checkbox" value="choose" name="choose">
+        <label for="tts">Choose Manually:</label>
+        <input type="submit" value="Submit">
+    </form> <br><br>
+    <h2 style="text-align:left">Chat Log:</h2>
+    <div class="log" id="log">
 </body>
 </html>
