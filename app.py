@@ -15,8 +15,10 @@ socketio = SocketIO
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode=None)
-#pip install simplewebsocket 
-#idk why but this script speiciflly only works if you DON'T have eventlet installed so make sure to pip uninstall eventlet
+print(socketio.async_mode)
+#python -m pip install twitchio flask flask_socketio pytz gtts simple-websocket pyglet
+#
+# make sure to pip uninstall eventlet also
 
 @app.route("/")
 def home():
@@ -59,7 +61,8 @@ class Bot(commands.Bot):
     def __init__(self):
         #connects to twitch channel
         self.tts_enabled = False
-        super().__init__(token='e6yobed5d48tky6otlahj4mlwecqe7', prefix='?', initial_channels=['bananababoo'])
+        super().__init__(token='e6yobed5d48tky6otlahj4mlwecqe7', prefix='?', initial_channels=['dougdougw'])
+    
 
     async def event_ready(self):
         print(f'Logged in as | {self.nick}')
@@ -79,7 +82,7 @@ class Bot(commands.Bot):
             userPool.pop(message.author.name.lower())
         userPool[message.author.name.lower()] = message.timestamp 
         # update time last chatted of the user and add to the end of the dict
-        two_min_ago = datetime.now(pytz.utc) - timedelta(minutes=2) # get the time 2 min ago uct
+        two_min_ago = datetime.now(pytz.utc) - timedelta(seconds=45) # get the time 2 min ago uct
         least_most_reacent_user = list(userPool.keys())[0] # get the first user in the dict which will be the user that has chatted the longest ago
         if userPool[least_most_reacent_user].replace(tzinfo=pytz.utc) < two_min_ago: # if the least mos _reacent user user last chatted 2 min ago
             userPool.pop(least_most_reacent_user) # remove them from the list

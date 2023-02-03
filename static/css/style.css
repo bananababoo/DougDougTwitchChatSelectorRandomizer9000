@@ -1,7 +1,8 @@
 * {
     font-family: 'Capriola', sans-serif;
-    background-color: #28243b;
+    background-color: hsl(250, 24%, 19%);
     color: #ccc;
+    scrollbar-width: none; /*firefox support */
 }
 
 form{
@@ -13,7 +14,7 @@ form{
     float: left;
 }
 
-.log{
+#log{
     width: 500px;
     padding: 15px;
     color: rgb(50, 58, 168);
