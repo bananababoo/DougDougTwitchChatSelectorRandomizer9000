@@ -82,9 +82,9 @@ class Bot(commands.Bot):
             userPool.pop(message.author.name.lower())
         userPool[message.author.name.lower()] = message.timestamp 
         # update time last chatted of the user and add to the end of the dict
-        two_min_ago = datetime.now(pytz.utc) - timedelta(seconds=45) # get the time 2 min ago uct
+        time_x = datetime.now(pytz.utc) - timedelta(seconds=60) # get the time 2 min ago uct
         least_most_reacent_user = list(userPool.keys())[0] # get the first user in the dict which will be the user that has chatted the longest ago
-        if userPool[least_most_reacent_user].replace(tzinfo=pytz.utc) < two_min_ago: # if the least mos _reacent user user last chatted 2 min ago
+        if userPool[least_most_reacent_user].replace(tzinfo=pytz.utc) < time_x: # if the least most recent user user last chatted more then x min ago
             userPool.pop(least_most_reacent_user) # remove them from the list
             print(f"{least_most_reacent_user} was popped due to not talking in 2 minuets")
         #this all works because whenever someone gets added to the list someone else will get removed but only if they havn't talked in the last 2 min
