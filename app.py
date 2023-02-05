@@ -16,9 +16,6 @@ socketio = SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode="threading")
 print(socketio.async_mode)
-#python -m pip install twitchio flask flask_socketio pytz gtts simple-websocket pyglet
-#
-# make sure to pip uninstall eventlet also
 
 @app.route("/")
 def home():
